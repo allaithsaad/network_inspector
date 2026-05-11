@@ -62,12 +62,17 @@ class _InspectorListScreenState extends State<InspectorListScreen> {
             onPressed: () => NetworkLogger.instance.clear(),
           ),
           IconButton(
-            icon: const Icon(Icons.visibility_off_outlined,
-                color: Colors.white70),
-            tooltip: 'Hide button',
+            icon: Icon(
+              NetworkLogger.instance.enabled
+                  ? Icons.pause_circle_outline
+                  : Icons.play_circle_outline,
+              color: NetworkLogger.instance.enabled
+                  ? Colors.white70
+                  : Colors.greenAccent,
+            ),
+            tooltip: NetworkLogger.instance.enabled ? 'Pause logging' : 'Resume logging',
             onPressed: () {
-              NetworkLogger.instance.enabled = false;
-              Navigator.of(context).pop();
+              NetworkLogger.instance.toggleEnabled();
             },
           ),
         ],

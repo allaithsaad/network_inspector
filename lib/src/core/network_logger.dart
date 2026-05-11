@@ -90,6 +90,12 @@ class NetworkLogger extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Toggle request logging on/off.
+  void toggleEnabled() {
+    enabled = !enabled;
+    notifyListeners();
+  }
+
   /// Remove all stored logs.
   void clear() {
     _logs.clear();
