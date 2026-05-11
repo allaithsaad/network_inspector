@@ -1,7 +1,7 @@
 name: network_inspector
 description: A lightweight in-app network inspector for Flutter. Floating draggable button with full request/response viewer. Works with any HTTP client.
 version: 0.1.0
-homepage: https://github.com/your-username/network_inspector
+homepage: https://github.com/allaithsaad/network_inspector
 
 environment:
   sdk: ^3.0.0
