@@ -88,7 +88,12 @@ class _NetworkInspectorOverlayState extends State<NetworkInspectorOverlay> {
             child: _InspectorButton(
               count: NetworkLogger.instance.logs.length,
               status: NetworkLogger.instance.networkStatus,
+              paused: !NetworkLogger.instance.enabled,
               onTap: () {
+                if (!NetworkLogger.instance.enabled) {
+                  NetworkLogger.instance.toggleEnabled();
+                  return;
+                }
                 final nav = widget.navigatorKey?.currentState ??
                     Navigator.of(context, rootNavigator: true);
                 nav.push(InspectorListScreen.route());
@@ -104,11 +109,13 @@ class _NetworkInspectorOverlayState extends State<NetworkInspectorOverlay> {
 class _InspectorButton extends StatelessWidget {
   final int count;
   final NetworkStatus status;
+  final bool paused;
   final VoidCallback onTap;
 
   const _InspectorButton({
     required this.count,
     required this.status,
+    required this.paused,
     required this.onTap,
   });
 
@@ -117,7 +124,9 @@ class _InspectorButton extends StatelessWidget {
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(24),
-      color: const Color(0xDD1A1A2E),
+      color: paused
+          ? const Color(0xDD2E1A1A)
+          : const Color(0xDD1A1A2E),
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
         onTap: onTap,
@@ -126,26 +135,31 @@ class _InspectorButton extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: _statusColor(status),
-                  shape: BoxShape.circle,
+              if (paused)
+                const Icon(Icons.play_arrow_rounded,
+                    color: Colors.greenAccent, size: 18)
+              else ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _statusColor(status),
+                    shape: BoxShape.circle,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              const Icon(Icons.network_check_rounded,
-                  color: Colors.white, size: 18),
-              if (count > 0) ...[
                 const SizedBox(width: 5),
-                Text(
-                  '$count',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold),
-                ),
+                const Icon(Icons.network_check_rounded,
+                    color: Colors.white, size: 18),
+                if (count > 0) ...[
+                  const SizedBox(width: 5),
+                  Text(
+                    '$count',
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
               ],
             ],
           ),
