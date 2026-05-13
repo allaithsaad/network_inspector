@@ -1,3 +1,7 @@
+## 1.0.2
+
+* Fix demo GIF not showing on pub.dev (use absolute raw GitHub URL).
+
 ## 1.0.1
 
 * Rename public API to match package name:
