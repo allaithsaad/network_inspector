@@ -33,15 +33,14 @@ class NetworkInspectorOverlay extends StatefulWidget {
   final bool show;
 
   /// The navigator key used to push the inspector screen.
-  /// Required when the overlay is placed above the Navigator (e.g. in
-  /// MaterialApp's builder). Pass your app's [navigatorKey] or `Get.key`.
-  final GlobalKey<NavigatorState>? navigatorKey;
+  /// Pass your app's [navigatorKey] or `Get.key` (for GetX apps).
+  final GlobalKey<NavigatorState> navigatorKey;
 
   const NetworkInspectorOverlay({
     super.key,
     required this.child,
+    required this.navigatorKey,
     this.show = true,
-    this.navigatorKey,
   });
 
   @override
@@ -94,7 +93,7 @@ class _NetworkInspectorOverlayState extends State<NetworkInspectorOverlay> {
                   NetworkLogger.instance.toggleEnabled();
                   return;
                 }
-                final nav = widget.navigatorKey?.currentState ??
+                final nav = widget.navigatorKey.currentState ??
                     Navigator.of(context, rootNavigator: true);
                 nav.push(InspectorListScreen.route());
               },

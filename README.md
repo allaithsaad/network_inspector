@@ -36,26 +36,33 @@ dependencies:
 ```dart
 import 'package:network_inspector/network_inspector.dart';
 
-// Inside MaterialApp builder:
-builder: (context, child) {
-  return NetworkInspectorOverlay(
-    show: true, // set false to hide (e.g. via a feature flag)
-    child: child!,
-  );
-},
+// Declare a navigator key in your app (or use Get.key for GetX):
+final navigatorKey = GlobalKey<NavigatorState>();
+
+// Pass it to both MaterialApp and NetworkInspectorOverlay:
+MaterialApp(
+  navigatorKey: navigatorKey,
+  builder: (context, child) {
+    return NetworkInspectorOverlay(
+      navigatorKey: navigatorKey, // required
+      show: true,                 // set false to hide (e.g. via a feature flag)
+      child: child!,
+    );
+  },
+);
 ```
 
-> **Using GetX or any setup where the overlay sits above the Navigator?**  
-> Pass `navigatorKey` so the inspector screen can be pushed correctly:
+> **Using GetX?** Pass `Get.key` as the `navigatorKey`.
 >
 > ```dart
-> builder: (context, child) {
->   return NetworkInspectorOverlay(
->     show: true,
->     navigatorKey: Get.key, // or your own GlobalKey<NavigatorState>
->     child: child!,
->   );
-> },
+> GetMaterialApp(
+>   builder: (context, child) {
+>     return NetworkInspectorOverlay(
+>       navigatorKey: Get.key,
+>       child: child!,
+>     );
+>   },
+> );
 > ```
 
 ### 2a — Automatic logging (`http` package)

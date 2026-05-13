@@ -2,9 +2,12 @@
 ///
 /// ## Quick start
 ///
-/// **1. Wrap your app:**
+/// **1. Wrap your app (pass your app's navigatorKey):**
 /// ```dart
-/// builder: (context, child) => NetworkInspectorOverlay(child: child!),
+/// builder: (context, child) => NetworkInspectorOverlay(
+///   navigatorKey: navigatorKey, // GlobalKey<NavigatorState> — required
+///   child: child!,
+/// ),
 /// ```
 ///
 /// **2a. Use the built-in HTTP client (automatic logging):**
