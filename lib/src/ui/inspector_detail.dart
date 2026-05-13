@@ -76,8 +76,35 @@ class InspectorDetailScreen extends StatelessWidget {
     return h.entries.map((e) => '${e.key}: ${e.value}').join('\n');
   }
 
+  String _summaryText() => [
+        'URL: ${log.url}',
+        'Method: ${log.method}',
+        'Status: ${log.statusCode ?? "Error"}',
+        'Duration: ${log.durationMs} ms',
+        'Time: ${log.timestamp.toLocal()}',
+      ].join('\n');
+
   Widget _infoSection(List<Widget> rows) => _card(
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              const Text('Summary',
+                  style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () =>
+                    Clipboard.setData(ClipboardData(text: _summaryText())),
+                child: const Icon(Icons.copy, color: Colors.white38, size: 16),
+              ),
+            ]),
+            const SizedBox(height: 8),
+            ...rows,
+          ],
+        ),
       );
 
   Widget _row(String label, String value, {Color? valueColor}) => Padding(
