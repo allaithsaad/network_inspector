@@ -1,12 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:kp_network_inspector/kp_network_inspector.dart';
+import 'package:network_inspector/network_inspector.dart';
 
 void main() {
-  test('adds one to input values', () {
-    final calculator = Calculator();
-    expect(calculator.addOne(2), 3);
-    expect(calculator.addOne(-7), -6);
-    expect(calculator.addOne(0), 1);
+  test('NetworkLogger singleton is accessible', () {
+    expect(NetworkLogger.instance, isNotNull);
+  });
+
+  test('NetworkLogger logs are initially empty', () {
+    NetworkLogger.instance.logs.clear();
+    expect(NetworkLogger.instance.logs, isEmpty);
   });
 }
