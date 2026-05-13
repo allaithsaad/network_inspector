@@ -4,13 +4,14 @@ version: 0.1.0
 homepage: https://github.com/allaithsaad/network_inspector
 
 environment:
-  sdk: ^3.0.0
+  sdk: ^3.10.0
   flutter: ">=3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
   http: ^1.0.0
+  share_plus: ^13.1.0
 
 dev_dependencies:
   flutter_test:

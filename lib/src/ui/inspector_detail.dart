@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import '../model/network_log.dart';
 
 class InspectorDetailScreen extends StatelessWidget {
@@ -48,6 +49,15 @@ class InspectorDetailScreen extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share_outlined),
+            tooltip: 'Share',
+            onPressed: () => SharePlus.instance.share(
+              ShareParams(text: _fullText()),
+            ),
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -75,6 +85,20 @@ class InspectorDetailScreen extends StatelessWidget {
     if (h == null || h.isEmpty) return '(none)';
     return h.entries.map((e) => '${e.key}: ${e.value}').join('\n');
   }
+
+  String _fullText() => '''
+=== Summary ===
+${_summaryText()}
+
+=== Request Headers ===
+${_headersStr(log.requestHeaders)}
+
+=== Request Body ===
+${_bodyStr(log.requestBody)}
+
+=== Response Body ===
+${_prettyJson(log.responseBody)}
+''';
 
   String _summaryText() => [
         'URL: ${log.url}',
