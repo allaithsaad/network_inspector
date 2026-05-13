@@ -1,3 +1,17 @@
+## 1.0.7
+
+* Example app updated with three tabs: `http`, `dio`, and manual logging.
+
+## 1.0.6
+
+* Remove `http` and `dio` dependencies — package now has zero HTTP dependencies.
+* Works with any HTTP client (`http`, `dio`, `retrofit`, `graphql`, etc.) via `logRequest`.
+* README updated with copy-paste adapter snippets for `http` and `dio`.
+
+## 1.0.5
+
+* Add `HttpWatcherDioInterceptor` — automatic logging for `dio` with one line.
+
 ## 1.0.4
 
 * Remove debug-only restriction — overlay and logging now work in all build modes.

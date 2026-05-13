@@ -1,7 +1,7 @@
 # flutter_http_watcher
 
 A lightweight in-app network inspector for Flutter.  
-Shows a draggable floating button that opens a full request/response viewer — no external dependencies beyond `http`, zero setup.
+Works with **any** HTTP client — `http`, `dio`, `retrofit`, `graphql`, or your own. Zero HTTP dependencies.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/demo.gif" width="250"/>
@@ -16,10 +16,9 @@ Shows a draggable floating button that opens a full request/response viewer — 
 - Color-coded by HTTP method (GET / POST / PUT / DELETE)
 - Color-coded status codes (green 2xx · orange 4xx · red 5xx)
 - Full request & response viewer with JSON pretty-printing
-- One-tap copy to clipboard
+- One-tap copy to clipboard · share full request as text
 - Pause / resume logging from within the inspector
-- Built-in `HttpWatcherClient` for the `http` package
-- Manual `logRequest` API for any HTTP client
+- Works with any HTTP client via `logRequest`
 - Controlled entirely by the `show` flag — use in debug, release, or staging
 
 ---
@@ -28,7 +27,7 @@ Shows a draggable floating button that opens a full request/response viewer — 
 
 ```yaml
 dependencies:
-  flutter_http_watcher: ^1.0.4
+  flutter_http_watcher: ^1.0.6
 ```
 
 ---
@@ -40,16 +39,14 @@ dependencies:
 ```dart
 import 'package:flutter_http_watcher/network_inspector.dart';
 
-// Declare a navigator key in your app (or use Get.key for GetX):
 final navigatorKey = GlobalKey<NavigatorState>();
 
-// Pass it to both MaterialApp and HttpWatcherOverlay:
 MaterialApp(
   navigatorKey: navigatorKey,
   builder: (context, child) {
     return HttpWatcherOverlay(
-      navigatorKey: navigatorKey, // required
-      show: true,                 // set false to hide (e.g. via a feature flag)
+      navigatorKey: navigatorKey,
+      show: true, // set false to hide
       child: child!,
     );
   },
@@ -57,35 +54,97 @@ MaterialApp(
 ```
 
 > **Using GetX?** Pass `Get.key` as the `navigatorKey`.
->
-> ```dart
-> GetMaterialApp(
->   builder: (context, child) {
->     return HttpWatcherOverlay(
->       navigatorKey: Get.key,
->       child: child!,
->     );
->   },
-> );
-> ```
 
-### 2a — Automatic logging (`http` package)
+---
+
+### 2 — Log requests
+
+#### `http` package
+
+Copy this wrapper into your project:
 
 ```dart
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter_http_watcher/network_inspector.dart';
 
-final client = HttpWatcherClient();
-final response = await client.get(Uri.parse('https://api.example.com/users'));
-// Every request/response is logged automatically.
+class WatcherHttpClient extends http.BaseClient {
+  final http.Client _inner;
+  WatcherHttpClient([http.Client? inner]) : _inner = inner ?? http.Client();
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final start = DateTime.now();
+    final streamed = await _inner.send(request);
+    final bytes = await streamed.stream.toBytes();
+    HttpWatcherLogger.instance.logRequest(
+      method: request.method,
+      url: request.url.toString(),
+      headers: Map<String, String>.from(request.headers),
+      body: request is http.Request ? request.body : null,
+      statusCode: streamed.statusCode,
+      responseBody: utf8.decode(bytes, allowMalformed: true),
+      startTime: start,
+    );
+    return http.StreamedResponse(Stream.value(bytes), streamed.statusCode,
+        headers: streamed.headers, contentLength: bytes.length);
+  }
+
+  @override
+  void close() => _inner.close();
+}
 ```
 
-Or wrap an existing client:
+#### `dio`
+
+Add this interceptor to your `Dio` instance:
 
 ```dart
-final client = HttpWatcherClient(myExistingClient);
+import 'package:dio/dio.dart';
+import 'package:flutter_http_watcher/network_inspector.dart';
+
+class WatcherDioInterceptor extends Interceptor {
+  final _starts = <int, DateTime>{};
+
+  @override
+  void onRequest(RequestOptions o, RequestInterceptorHandler h) {
+    _starts[o.hashCode] = DateTime.now();
+    h.next(o);
+  }
+
+  @override
+  void onResponse(Response r, ResponseInterceptorHandler h) {
+    final start = _starts.remove(r.requestOptions.hashCode) ?? DateTime.now();
+    HttpWatcherLogger.instance.logRequest(
+      method: r.requestOptions.method,
+      url: r.requestOptions.uri.toString(),
+      headers: r.requestOptions.headers.map((k, v) => MapEntry(k, v.toString())),
+      body: r.requestOptions.data,
+      statusCode: r.statusCode ?? 0,
+      responseBody: r.data?.toString() ?? '',
+      startTime: start,
+    );
+    h.next(r);
+  }
+
+  @override
+  void onError(DioException e, ErrorInterceptorHandler h) {
+    final start = _starts.remove(e.requestOptions.hashCode) ?? DateTime.now();
+    HttpWatcherLogger.instance.logRequest(
+      method: e.requestOptions.method,
+      url: e.requestOptions.uri.toString(),
+      headers: e.requestOptions.headers.map((k, v) => MapEntry(k, v.toString())),
+      body: e.requestOptions.data,
+      statusCode: e.response?.statusCode ?? 0,
+      responseBody: e.response?.data?.toString() ?? e.message ?? '',
+      startTime: start,
+    );
+    h.next(e);
+  }
+}
 ```
 
-### 2b — Manual logging (any HTTP client)
+#### Any other client (manual)
 
 ```dart
 final start = DateTime.now();
@@ -117,8 +176,6 @@ Tap any row to see the full request headers, body, response body, status code, a
 
 ## Connectivity indicator
 
-The floating button shows a small dot reflecting the current network status, checked every 5 seconds:
-
 | Color | Meaning |
 |-------|---------|
 | 🟢 Green | Device is online |
@@ -130,9 +187,6 @@ The floating button shows a small dot reflecting the current network status, che
 ## Configuration
 
 ```dart
-// Show/hide the button via a constant:
-HttpWatcherOverlay(show: AppConstants.showNetworkInspector, child: child!)
-
 // Disable logging at runtime:
 HttpWatcherLogger.instance.enabled = false;
 
