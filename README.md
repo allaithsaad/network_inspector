@@ -24,7 +24,7 @@ Shows a draggable floating button that opens a full request/response viewer — 
 
 ```yaml
 dependencies:
-  network_inspector: ^0.1.0
+  flutter_network_inspector: ^1.0.0
 ```
 
 ---
@@ -34,7 +34,7 @@ dependencies:
 ### 1 — Wrap your app
 
 ```dart
-import 'package:network_inspector/network_inspector.dart';
+import 'package:flutter_network_inspector/network_inspector.dart';
 
 // Declare a navigator key in your app (or use Get.key for GetX):
 final navigatorKey = GlobalKey<NavigatorState>();
@@ -68,7 +68,7 @@ MaterialApp(
 ### 2a — Automatic logging (`http` package)
 
 ```dart
-import 'package:network_inspector/network_inspector.dart';
+import 'package:flutter_network_inspector/network_inspector.dart';
 
 final client = NetworkInspectorHttpClient();
 final response = await client.get(Uri.parse('https://api.example.com/users'));

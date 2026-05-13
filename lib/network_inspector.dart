@@ -33,7 +33,7 @@
 /// ```dart
 /// NetworkInspectorOverlay(show: AppConstants.showNetworkInspector, child: child!)
 /// ```
-library network_inspector;
+library flutter_network_inspector;
 
 export 'src/core/network_logger.dart';
 export 'src/model/network_log.dart';
