@@ -1,3 +1,7 @@
+## 1.2.1
+
+* Update screenshots and demo GIF in README.
+
 ## 1.2.0
 
 * Add **HAR export** — export all logs as a `.har` file (importable in Postman, Charles, browser DevTools).
