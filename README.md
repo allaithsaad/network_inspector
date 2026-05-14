@@ -12,10 +12,12 @@ Works with **any** HTTP client — `http`, `dio`, `retrofit`, `graphql`, or your
 ## Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/1.jpg" width="200"/>
-  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/2.jpg" width="200"/>
-  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/3.jpg" width="200"/>
-  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/4.jpg" width="200"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/1.jpg" width="160"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/2.jpg" width="160"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/3.jpg" width="160"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/4.jpg" width="160"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/5.jpg" width="160"/>
+  <img src="https://raw.githubusercontent.com/allaithsaad/flutter_http_watcher/main/doc/6.jpg" width="160"/>
 </p>
 
 ---
@@ -24,6 +26,8 @@ Works with **any** HTTP client — `http`, `dio`, `retrofit`, `graphql`, or your
 
 - Draggable floating button with live request count
 - **Live connectivity dot** — green (online) · red (offline) · grey (unknown)
+- **Error badge** — red badge on the floating button shows 4xx / 5xx / failed count
+- **Custom icon** — replace the default button icon via `HttpWatcherOverlay(icon: ...)`
 - Color-coded by HTTP method (GET / POST / PUT / DELETE)
 - Color-coded status codes (green 2xx · orange 4xx · red 5xx)
 - Search bar + method & status code filter chips
@@ -32,8 +36,7 @@ Works with **any** HTTP client — `http`, `dio`, `retrofit`, `graphql`, or your
 - **Request replay** — re-send any logged request with one tap
 - **Stats screen** — success rate, avg duration, top hosts, slowest requests
 - **Export logs** — save as `.txt` or export as `.har` (Postman / Charles / DevTools compatible)
-- **Error badge** — red badge on the floating button shows 4xx / 5xx / failed count
-- **Custom icon** — replace the default button icon via `HttpWatcherOverlay(icon: ...)`
+- **Web Viewer** — open live logs in any browser on the same WiFi network
 - Dark / light theme toggle
 - One-tap copy · share full request as text
 - Pause / resume logging
@@ -55,6 +58,8 @@ dependencies:
 
 ### 1 — Wrap your app
 
+Add `HttpWatcherOverlay` as the outermost widget in your `MaterialApp` builder. It requires your app's `navigatorKey` so it can open the inspector screen above your navigation stack.
+
 ```dart
 import 'package:flutter_http_watcher/network_inspector.dart';
 
@@ -65,22 +70,23 @@ MaterialApp(
   builder: (context, child) {
     return HttpWatcherOverlay(
       navigatorKey: navigatorKey,
-      show: true, // set false to hide
+      show: true, // set to false to hide the button entirely
       child: child!,
     );
   },
 );
 ```
 
-> **Using GetX?** Pass `Get.key` as the `navigatorKey`.
+> **Using GetX?** Pass `Get.key` as the `navigatorKey`.  
+> **Using go_router?** Pass your `GlobalKey<NavigatorState>` the same way.
 
 ---
 
 ### 2 — Log requests
 
-#### `http` package
+The package has **no built-in HTTP client**. Copy one of the adapters below into your project and use it instead of your normal client.
 
-Copy this wrapper into your project:
+#### `http` package
 
 ```dart
 import 'dart:convert';
@@ -112,6 +118,12 @@ class WatcherHttpClient extends http.BaseClient {
   @override
   void close() => _inner.close();
 }
+```
+
+Use it like this:
+```dart
+final client = WatcherHttpClient();
+final response = await client.get(Uri.parse('https://api.example.com/users'));
 ```
 
 #### `dio`
@@ -163,7 +175,15 @@ class WatcherDioInterceptor extends Interceptor {
 }
 ```
 
+Add it to your `Dio` instance:
+```dart
+final dio = Dio();
+dio.interceptors.add(WatcherDioInterceptor());
+```
+
 #### Any other client (manual)
+
+Call `logRequest` manually after every response:
 
 ```dart
 final start = DateTime.now();
@@ -182,50 +202,121 @@ HttpWatcherLogger.instance.logRequest(
 
 ## Inspector screen
 
-Open by tapping the floating button. From the app bar you can:
+Tap the floating button to open the inspector. All options are in the **⋮ menu** (top-right corner):
 
-| Button | Action |
-|--------|--------|
-| Stats | Success rate, avg duration, top hosts, slowest requests |
-| Export | Save logs as `.txt` or export as `.har` (Postman / Charles / DevTools) |
-| Theme | Toggle dark / light mode |
-| Clear | Remove all logged requests |
-| Pause / Play | Stop or resume capturing new requests |
+| Option | Description |
+|--------|-------------|
+| **Stats** | Success rate, average duration, by-method breakdown, top hosts, slowest requests |
+| **Save as .txt** | Export all logs as a plain text file and share it |
+| **Export as .har** | Export in HAR format — importable in Postman, Charles Proxy, or browser DevTools |
+| **Dark / Light mode** | Toggle the inspector theme |
+| **Pause / Resume** | Stop or start capturing new requests |
+| **Clear all** | Delete all logged requests |
 
-Tap any row to see the full request headers, body, response body, status code, and duration.  
-From the detail screen you can **copy as cURL**, **replay** the request, share, or copy any section.
+### Request list
+
+- Requests are shown newest-first with method, URL path, status code, and duration
+- Use the **search bar** to filter by URL, method, or status code
+- Use the **method chips** (GET / POST / PUT / DELETE) to filter by HTTP method
+- Use the **status chips** (2xx / 4xx / 5xx / Error) to filter by response type
+
+### Request detail
+
+Tap any request row to open the detail screen. From here you can:
+
+| Action | How |
+|--------|-----|
+| **Copy as cURL** | Tap the cURL icon in the app bar — ready to paste in any terminal |
+| **Replay request** | Tap the replay icon — re-sends the exact same request and logs the new response |
+| **Share** | Tap the share icon to share the full request + response as text |
+| **Copy section** | Tap the copy icon next to any section (headers, body, response) |
+
+---
+
+## Floating button
+
+The floating button is **draggable** — press and drag it to any edge of the screen.
+
+| Element | Meaning |
+|---------|---------|
+| 🟢 / 🔴 / ⚪ dot | Live connectivity status (online / offline / unknown) |
+| Number | Total logged request count |
+| Red badge | Number of 4xx / 5xx / failed requests since last clear |
+| ▶ icon | Logging is paused — tap to resume |
 
 ---
 
 ## Connectivity indicator
 
+The dot on the floating button reflects live network connectivity, checked every 5 seconds.
+
 | Color | Meaning |
 |-------|---------|
-| 🟢 Green | Device is online |
+| 🟢 Green | Device has an active internet connection |
 | 🔴 Red | Device is offline |
-| ⚪ Grey | Status not yet determined |
+| ⚪ Grey | Status not yet determined (app just started) |
+
+---
+
+## Stats screen
+
+Open via **⋮ → Stats**. Shows:
+
+- Total requests, success count, client error count, server error count
+- Success rate progress bar
+- Average response duration
+- By-method breakdown (GET / POST / PUT / DELETE)
+- Top 5 hosts by request count
+- Top 5 slowest requests
+
+---
+
+## Web Viewer
+
+Start a local HTTP server on the device and open the logs in any browser on the **same WiFi network** — useful for viewing on a laptop while the app runs on a phone.
+
+1. Tap **⋮ → Web Viewer**
+2. The server starts and a URL appears (e.g. `http://192.168.1.5:9742`)
+3. Open that URL in any browser on the same WiFi
+4. The page updates every 3 seconds with new requests
+
+The browser page includes:
+- Search bar — filter by URL, method, or status
+- Method chips (GET / POST / PUT / DELETE)
+- Status chips (2xx / 4xx / 5xx / Error)
+- Click any row to see full request details
+- **Copy** buttons on every section (URL, cURL, headers, request body, response body)
+
+```dart
+// Control programmatically:
+await HttpWatcherLogger.instance.startWebServer();
+print(HttpWatcherLogger.instance.webServerUrl); // http://192.168.x.x:9742
+await HttpWatcherLogger.instance.stopWebServer();
+```
+
+> **Note:** The web viewer runs on port `9742`. Make sure your device firewall allows connections on that port.
 
 ---
 
 ## Configuration
 
 ```dart
-// Disable logging at runtime:
+// Disable logging at runtime (overlay stays visible, no new logs captured):
 HttpWatcherLogger.instance.enabled = false;
 
 // Toggle logging on/off:
 HttpWatcherLogger.instance.toggleEnabled();
 
-// Change maximum entries kept in memory (default: 300):
+// Change the maximum number of entries kept in memory (default: 300):
 HttpWatcherLogger.instance.maxEntries = 100;
 
-// Read the current error count (4xx / 5xx / failed):
+// Read the current error count (4xx / 5xx / failed requests):
 final errors = HttpWatcherLogger.instance.errorCount;
 ```
 
 ### Custom icon
 
-Pass any `IconData` to replace the default floating button icon:
+Replace the default `network_check` icon with any Flutter `IconData`:
 
 ```dart
 HttpWatcherOverlay(
@@ -235,9 +326,17 @@ HttpWatcherOverlay(
 )
 ```
 
-### Error badge
+### Hide in production
 
-A red badge appears automatically on the floating button whenever there are 4xx, 5xx, or failed requests. It clears when you tap **Clear** inside the inspector.
+Control visibility with the `show` flag — no need to remove any code:
+
+```dart
+HttpWatcherOverlay(
+  navigatorKey: navigatorKey,
+  show: kDebugMode, // true in debug, false in release
+  child: child!,
+)
+```
 
 ---
 
